@@ -126,11 +126,15 @@
                 <div class="single-p">
                     <div class="thumb-p">
                             <?php // Post's featured image
-                            the_post_thumbnail('thumbnail');?>
+                            echo '<a href="<?php echo the_permalink(); ?>"'.the_post_thumbnail('thumbnail').'</a>'?>
                     </div>
                     <div class="name-p">        
                             <?php // Post's title
-                           echo "<h4>".the_title()."</h4>";
+                           echo '<a href="<?php echo the_permalink(); ?>"'.the_title().'</a>';
+                           $id = get_the_ID();
+                           $date = get_post_meta($id ,'_wpse_value', true);
+
+                           echo "<h4> Date: ". $date ."</h4>";
                             ?>
                     </div>
                 </div>
@@ -158,10 +162,12 @@
             // Use nonce for verification to secure data sending
             wp_nonce_field( basename( __FILE__ ), 'wpse_our_nonce' );
 
+            $value = get_post_meta( $post->ID, '_wpse_value', true );
+
             ?>
 
             <!-- my custom value input -->
-            <input type="date" name="wpse_value" value="">
+            <input type="date" name="wpse_value" id="wpse_value" value="<?php echo $value?>">
 
             <?php
         }
@@ -209,22 +215,30 @@
         //simply we have to save the data now
         global $wpdb;
 
-        $table = $wpdb->base_prefix . '_posts';
+//         $table = $wpdb->base_prefix . '_posts';
 
-  $wpdb->insert(
-            $table,
-            array(
-                'col_post_id' => $post_id, //as we are having it by default with this function
-                'col_value'   =>  $wpse_value  //assuming we are passing numerical value
-              ),
-            array(
-                '%d', //%s - string, %d - integer, %f - float
-                '%d', //%s - string, %d - integer, %f - float
-              )
-          );
+//   $wpdb->insert(
+//             $table,
+//             array(
+//                 'col_post_id' => $post_id, //as we are having it by default with this function
+//                 'col_value'   =>  $wpse_value  //assuming we are passing numerical value
+//               ),
+//             array(
+//                 '%d', //%s - string, %d - integer, %f - float
+//                 '%d', //%s - string, %d - integer, %f - float
+//               )
+//           );
 
+
+        // Sanitize user input.
+    $my_data = sanitize_text_field( $_POST['wpse_value'] );
+
+    // Update the meta field in the database.
+    update_post_meta( $post_id, '_wpse_value', $my_data );
 
         }
+
+
         add_action( 'save_post', 'wpse_save_meta_fields' );
         add_action( 'new_to_publish', 'wpse_save_meta_fields' );
         
